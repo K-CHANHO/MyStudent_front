@@ -1,4 +1,4 @@
-# .
+# MyStudent - 과외 학생 관리 플랫폼
 
 This template should help get you started developing with Vue 3 in Vite.
 

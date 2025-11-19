@@ -1,19 +1,29 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
-const email = ref('')
-const password = ref('')
+const form = ref({
+  name: '',
+  email: '',
+  password: '',
+  passwordConfirm: '',
+  phone: ''
+})
+
 const isLoading = ref(false)
 const errorMessage = ref('')
 
-const handleLogin = async () => {
-  if (!email.value || !password.value) {
-    errorMessage.value = '이메일과 비밀번호를 모두 입력해주세요.'
+const isPasswordMatch = computed(() => {
+  return form.value.password === form.value.passwordConfirm
+})
+
+const handleSignup = async () => {
+  if (!isPasswordMatch.value) {
+    errorMessage.value = '비밀번호가 일치하지 않습니다.'
     return
   }
 
@@ -21,10 +31,11 @@ const handleLogin = async () => {
   errorMessage.value = ''
 
   try {
-    await authStore.login(email.value, password.value)
-    router.push('/')
+    await authStore.signup(form.value)
+    alert('회원가입이 완료되었습니다. 로그인해주세요.')
+    router.push('/login')
   } catch (error) {
-    errorMessage.value = '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.'
+    errorMessage.value = '회원가입 중 오류가 발생했습니다.'
   } finally {
     isLoading.value = false
   }
@@ -32,21 +43,45 @@ const handleLogin = async () => {
 </script>
 
 <template>
-  <div class="login-container">
-    <div class="login-card">
+  <div class="signup-container">
+    <div class="signup-card">
       <div class="brand-section">
         <h1 class="logo">MyStudent</h1>
-        <p class="subtitle">프리미엄 과외 학생 관리 플랫폼</p>
+        <p class="subtitle">선생님 회원가입</p>
       </div>
 
-      <form @submit.prevent="handleLogin" class="login-form">
+      <form @submit.prevent="handleSignup" class="signup-form">
+        <div class="form-group">
+          <label for="name">이름</label>
+          <input 
+            type="text" 
+            id="name" 
+            v-model="form.name" 
+            placeholder="실명을 입력해주세요"
+            required
+            :disabled="isLoading"
+          />
+        </div>
+
         <div class="form-group">
           <label for="email">이메일</label>
           <input 
             type="email" 
             id="email" 
-            v-model="email" 
+            v-model="form.email" 
             placeholder="example@email.com"
+            required
+            :disabled="isLoading"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="phone">연락처</label>
+          <input 
+            type="tel" 
+            id="phone" 
+            v-model="form.phone" 
+            placeholder="010-0000-0000"
             required
             :disabled="isLoading"
           />
@@ -57,11 +92,28 @@ const handleLogin = async () => {
           <input 
             type="password" 
             id="password" 
-            v-model="password" 
-            placeholder="비밀번호를 입력하세요"
+            v-model="form.password" 
+            placeholder="8자 이상 입력해주세요"
+            minlength="8"
             required
             :disabled="isLoading"
           />
+        </div>
+
+        <div class="form-group">
+          <label for="passwordConfirm">비밀번호 확인</label>
+          <input 
+            type="password" 
+            id="passwordConfirm" 
+            v-model="form.passwordConfirm" 
+            placeholder="비밀번호를 다시 입력해주세요"
+            required
+            :disabled="isLoading"
+            :class="{ 'error-border': form.passwordConfirm && !isPasswordMatch }"
+          />
+          <span v-if="form.passwordConfirm && !isPasswordMatch" class="error-text">
+            비밀번호가 일치하지 않습니다.
+          </span>
         </div>
 
         <div v-if="errorMessage" class="error-message">
@@ -69,43 +121,32 @@ const handleLogin = async () => {
         </div>
 
         <button type="submit" class="btn-primary" :disabled="isLoading">
-          <span v-if="isLoading">로그인 중...</span>
-          <span v-else>로그인</span>
+          <span v-if="isLoading">가입 처리 중...</span>
+          <span v-else>가입하기</span>
         </button>
       </form>
 
-      <div class="divider">
-        <span>또는</span>
-      </div>
-
-      <div class="social-login">
-        <button class="btn-kakao" type="button">
-          <span class="icon">💬</span> 카카오 로그인
-        </button>
-      </div>
-
       <div class="auth-links">
-        <a href="#" class="link">비밀번호 찾기</a>
-        <span class="separator">|</span>
-        <RouterLink to="/signup" class="link">회원가입</RouterLink>
+        <span>이미 계정이 있으신가요?</span>
+        <RouterLink to="/login" class="link">로그인하기</RouterLink>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.login-container {
+.signup-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  padding: 1rem;
+  padding: 2rem 1rem;
 }
 
-.login-card {
+.signup-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 480px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   border-radius: var(--radius-xl);
@@ -116,23 +157,24 @@ const handleLogin = async () => {
 
 .brand-section {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
 .logo {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 800;
   color: var(--color-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   letter-spacing: -0.5px;
 }
 
 .subtitle {
   color: var(--color-text-muted);
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
-.login-form {
+.signup-form {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -165,8 +207,17 @@ const handleLogin = async () => {
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
+.form-group input.error-border {
+  border-color: var(--color-danger);
+}
+
+.error-text {
+  font-size: 0.8rem;
+  color: var(--color-danger);
+}
+
 .btn-primary {
-  margin-top: 0.5rem;
+  margin-top: 1rem;
   padding: 0.875rem;
   background-color: var(--color-primary);
   color: white;
@@ -194,87 +245,40 @@ const handleLogin = async () => {
   border-radius: var(--radius-sm);
 }
 
-.divider {
-  margin: 2rem 0;
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: var(--color-text-muted);
-  font-size: 0.875rem;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.divider span {
-  padding: 0 1rem;
-}
-
-.social-login {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.btn-kakao {
-  width: 100%;
-  padding: 0.875rem;
-  background-color: #FEE500;
-  color: #000000;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: opacity 0.2s;
-}
-
-.btn-kakao:hover {
-  opacity: 0.9;
-}
-
 .auth-links {
   margin-top: 2rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   font-size: 0.9rem;
   color: var(--color-text-muted);
 }
 
 .link {
-  color: var(--color-text-muted);
+  color: var(--color-primary);
+  font-weight: 600;
   transition: color 0.2s;
 }
 
 .link:hover {
-  color: var(--color-primary);
   text-decoration: underline;
-}
-
-.separator {
-  color: var(--color-border);
 }
 
 /* Responsive Adjustments */
 @media (max-width: 480px) {
-  .login-container {
+  .signup-container {
     background: white;
     padding: 0;
+    align-items: flex-start;
   }
 
-  .login-card {
+  .signup-card {
     box-shadow: none;
     border: none;
     border-radius: 0;
-    height: 100vh;
+    min-height: 100vh;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     justify-content: center;

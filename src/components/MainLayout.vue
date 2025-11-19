@@ -1,12 +1,40 @@
 <script setup>
-import { RouterLink } from 'vue-router'
+import { ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const router = useRouter()
+const authStore = useAuthStore()
+const isSidebarOpen = ref(false)
+
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value
+}
+
+const handleLogout = () => {
+  if (confirm('로그아웃 하시겠습니까?')) {
+    authStore.logout()
+  }
+}
+
+// Close sidebar on route change (for mobile)
+router.afterEach(() => {
+  isSidebarOpen.value = false
+})
 </script>
 
 <template>
   <div class="layout">
-    <aside class="sidebar">
+    <!-- Mobile Overlay -->
+    <div 
+      class="mobile-overlay" 
+      v-if="isSidebarOpen"
+      @click="isSidebarOpen = false"
+    ></div>
+
+    <aside class="sidebar" :class="{ 'open': isSidebarOpen }">
       <div class="logo">
-        <h2>StudyMate</h2>
+        <h2>MyStudent</h2>
       </div>
       <nav class="nav">
         <RouterLink to="/" class="nav-item" active-class="active">
@@ -29,10 +57,16 @@ import { RouterLink } from 'vue-router'
     </aside>
     <main class="main-content">
       <header class="header">
-        <h1 class="page-title">환영합니다, 선생님!</h1>
-        <div class="user-profile">
+        <div class="header-left">
+          <button class="menu-btn" @click="toggleSidebar">
+            <span class="icon">☰</span>
+          </button>
+          <h1 class="page-title">환영합니다, 선생님!</h1>
+        </div>
+        <div class="user-profile" @click="handleLogout" title="로그아웃">
           <div class="avatar">T</div>
-          <span>Teacher Name</span>
+          <span class="user-name">Teacher Name</span>
+          <span class="logout-icon">🚪</span>
         </div>
       </header>
       <div class="content-area">
@@ -49,6 +83,14 @@ import { RouterLink } from 'vue-router'
   background-color: var(--color-bg-light);
 }
 
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  display: none;
+}
+
 .sidebar {
   width: 260px;
   background-color: var(--color-bg-white);
@@ -56,6 +98,8 @@ import { RouterLink } from 'vue-router'
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
+  transition: transform 0.3s ease;
+  z-index: 50;
 }
 
 .logo {
@@ -99,6 +143,7 @@ import { RouterLink } from 'vue-router'
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0; /* Prevent flex child overflow */
 }
 
 .header {
@@ -109,6 +154,22 @@ import { RouterLink } from 'vue-router'
   align-items: center;
   justify-content: space-between;
   padding: 0 2rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-text-main);
+  padding: 0.25rem;
 }
 
 .page-title {
@@ -123,6 +184,23 @@ import { RouterLink } from 'vue-router'
   gap: 0.75rem;
   font-weight: 500;
   cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s;
+}
+
+.user-profile:hover {
+  background-color: var(--color-bg-light);
+}
+
+.logout-icon {
+  font-size: 1.2rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.user-profile:hover .logout-icon {
+  opacity: 1;
 }
 
 .avatar {
@@ -141,5 +219,45 @@ import { RouterLink } from 'vue-router'
   padding: 2rem;
   flex: 1;
   overflow-y: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .mobile-overlay {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .menu-btn {
+    display: flex;
+  }
+
+  .header {
+    padding: 0 1rem;
+  }
+
+  .page-title {
+    font-size: 1.1rem;
+  }
+
+  .user-name {
+    display: none; /* Hide name on small screens */
+  }
+  
+  .content-area {
+    padding: 1rem;
+  }
 }
 </style>

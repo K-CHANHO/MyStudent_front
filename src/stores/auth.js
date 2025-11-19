@@ -53,11 +53,28 @@ export const useAuthStore = defineStore('auth', () => {
     router.push('/login')
   }
 
+  async function signup(userData) {
+    try {
+      // TODO: Replace with actual API call
+      // const response = await axios.post('/api/signup', userData)
+      
+      console.log('Attempting signup with:', userData)
+      
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      return true
+    } catch (error) {
+      console.error('Signup failed:', error)
+      throw error
+    }
+  }
+
   return {
     user,
     accessToken,
     refreshToken,
     login,
-    logout
+    logout,
+    signup
   }
 })
