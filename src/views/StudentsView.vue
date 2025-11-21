@@ -12,6 +12,8 @@ const showModal = ref(false)
 const isEditing = ref(false)
 const errorMessage = ref('')
 
+const isSubmitting = ref(false)
+
 const form = ref({
   studentId: '',
   name: '',
@@ -66,6 +68,8 @@ const handleSubmit = async () => {
     return
   }
 
+  isSubmitting.value = true
+
   try {
     if (isEditing.value) {
       await api.put(`/students/${form.value.studentId}/${authStore.user.userId}`, {
@@ -95,6 +99,8 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Operation failed:', error)
     errorMessage.value = error.response?.data?.message || '작업 중 오류가 발생했습니다.'
+  } finally {
+    isSubmitting.value = false
   }
 }
 
@@ -171,26 +177,47 @@ onMounted(() => {
     </div>
 
     <!-- Modal -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+    <div v-if="showModal" class="modal-overlay" @click.self="!isSubmitting && closeModal()">
       <div class="modal-content">
         <div class="modal-header">
           <h3 class="modal-title">{{ isEditing ? '학생 정보 수정' : '새 학생 등록' }}</h3>
         </div>
 
+        <div v-if="isSubmitting" class="progress-bar">
+          <div class="progress-value"></div>
+        </div>
+
         <form @submit.prevent="handleSubmit">
           <div class="form-group" v-if="!isEditing">
             <label>학생 ID <span class="required">*</span></label>
-            <input v-model="form.studentId" type="text" placeholder="고유 ID 입력" required />
+            <input
+              v-model="form.studentId"
+              type="text"
+              placeholder="고유 ID 입력"
+              required
+              :disabled="isSubmitting"
+            />
           </div>
 
           <div class="form-group">
             <label>이름 <span class="required">*</span></label>
-            <input v-model="form.name" type="text" placeholder="이름 입력" required />
+            <input
+              v-model="form.name"
+              type="text"
+              placeholder="이름 입력"
+              required
+              :disabled="isSubmitting"
+            />
           </div>
 
           <div class="form-group">
             <label>나이</label>
-            <input v-model="form.age" type="number" placeholder="나이 입력" />
+            <input
+              v-model="form.age"
+              type="number"
+              placeholder="나이 입력"
+              :disabled="isSubmitting"
+            />
           </div>
 
           <div class="form-group">
@@ -201,6 +228,7 @@ onMounted(() => {
               type="tel"
               placeholder="010-0000-0000"
               maxlength="13"
+              :disabled="isSubmitting"
             />
           </div>
 
@@ -212,12 +240,17 @@ onMounted(() => {
               type="tel"
               placeholder="010-0000-0000"
               maxlength="13"
+              :disabled="isSubmitting"
             />
           </div>
 
           <div class="form-group">
             <label>메모</label>
-            <textarea v-model="form.memo" placeholder="특이사항 등 메모"></textarea>
+            <textarea
+              v-model="form.memo"
+              placeholder="특이사항 등 메모"
+              :disabled="isSubmitting"
+            ></textarea>
           </div>
 
           <div v-if="errorMessage" class="error-message">
@@ -225,10 +258,15 @@ onMounted(() => {
           </div>
 
           <div class="modal-actions">
-            <button type="button" class="btn btn-secondary btn-full" @click="closeModal">
+            <button
+              type="button"
+              class="btn btn-secondary btn-full"
+              @click="closeModal"
+              :disabled="isSubmitting"
+            >
               취소
             </button>
-            <button type="submit" class="btn btn-primary btn-full">
+            <button type="submit" class="btn btn-primary btn-full" :disabled="isSubmitting">
               {{ isEditing ? '수정' : '등록' }}
             </button>
           </div>
@@ -321,5 +359,34 @@ onMounted(() => {
   color: var(--color-text-muted);
   background: var(--color-bg-light);
   border-radius: var(--radius-lg);
+}
+
+.progress-bar {
+  height: 4px;
+  background-color: #e0e7ff;
+  overflow: hidden;
+  width: 100%;
+  margin-bottom: 1rem;
+  border-radius: 2px;
+}
+
+.progress-value {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-primary);
+  animation: indeterminate 1.5s infinite linear;
+  transform-origin: 0% 50%;
+}
+
+@keyframes indeterminate {
+  0% {
+    transform: translateX(0) scaleX(0);
+  }
+  40% {
+    transform: translateX(0) scaleX(0.4);
+  }
+  100% {
+    transform: translateX(100%) scaleX(0.5);
+  }
 }
 </style>
