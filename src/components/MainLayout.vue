@@ -26,13 +26,9 @@ router.afterEach(() => {
 <template>
   <div class="layout">
     <!-- Mobile Overlay -->
-    <div 
-      class="mobile-overlay" 
-      v-if="isSidebarOpen"
-      @click="isSidebarOpen = false"
-    ></div>
+    <div class="mobile-overlay" v-if="isSidebarOpen" @click="isSidebarOpen = false"></div>
 
-    <aside class="sidebar" :class="{ 'open': isSidebarOpen }">
+    <aside class="sidebar" :class="{ open: isSidebarOpen }">
       <div class="logo">
         <h2>MyStudent</h2>
       </div>
@@ -54,7 +50,7 @@ router.afterEach(() => {
           설정
         </RouterLink>
       </nav>
-      <div class="nav-footer" style="margin-top: auto;">
+      <div class="nav-footer" style="margin-top: auto">
         <button @click="handleLogout" class="nav-item logout-btn">
           <span class="icon">🚪</span>
           로그아웃
@@ -69,9 +65,11 @@ router.afterEach(() => {
           </button>
           <h1 class="page-title">환영합니다, 선생님!</h1>
         </div>
-        <div class="user-profile">
-          <div class="avatar">T</div>
-          <span class="user-name">Teacher Name</span>
+        <div class="user-profile" @click="router.push('/profile')">
+          <div class="avatar">{{ authStore.user?.name?.[0] || 'T' }}</div>
+          <span class="user-name">{{
+            authStore.user?.name || authStore.user?.userId || 'Guest'
+          }}</span>
         </div>
       </header>
       <div class="content-area">
@@ -198,8 +196,6 @@ router.afterEach(() => {
   background-color: var(--color-bg-light);
 }
 
-
-
 .avatar {
   width: 36px;
   height: 36px;
@@ -252,12 +248,11 @@ router.afterEach(() => {
   .user-name {
     display: none; /* Hide name on small screens */
   }
-  
+
   .content-area {
     padding: 1rem;
   }
 }
-
 
 .logout-btn {
   width: 100%;

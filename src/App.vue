@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import MainLayout from './components/MainLayout.vue'
+import GlobalModal from '@/components/common/GlobalModal.vue'
 
 const route = useRoute()
 
@@ -15,4 +16,5 @@ const layout = computed(() => {
   <component :is="layout">
     <RouterView />
   </component>
+  <GlobalModal />
 </template>

@@ -9,37 +9,43 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
-      meta: { layout: 'auth' }
+      meta: { layout: 'auth' },
     },
     {
       path: '/signup',
       name: 'signup',
       component: () => import('../views/SignupView.vue'),
-      meta: { layout: 'auth' }
+      meta: { layout: 'auth' },
     },
     {
       path: '/',
       name: 'home',
       component: HomeView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/students',
       name: 'students',
       component: () => import('../views/StudentsView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/schedule',
       name: 'schedule',
       component: () => import('../views/ScheduleView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/settings',
       name: 'settings',
       component: () => import('../views/SettingsView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/ProfileView.vue'),
+      meta: { requiresAuth: true },
     },
   ],
 })
@@ -47,7 +53,7 @@ const router = createRouter({
 // Navigation Guard
 router.beforeEach((to, from, next) => {
   const accessToken = localStorage.getItem('accessToken')
-  
+
   if (to.meta.requiresAuth && !accessToken) {
     next('/login')
   } else if (to.path === '/login' && accessToken) {

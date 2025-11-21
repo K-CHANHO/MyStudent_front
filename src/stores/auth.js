@@ -11,11 +11,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(userId, password) {
     try {
-      const response = await api.post('/auth/login', { 
-        userId, 
-        password 
+      const response = await api.post('/auth/login', {
+        userId,
+        password,
       })
-      
+
       // Backend returns CommonResponse<LoginResponse>
       // response.data is CommonResponse
       // response.data.data is LoginResponse
@@ -23,10 +23,11 @@ export const useAuthStore = defineStore('auth', () => {
 
       accessToken.value = loginData.accessToken
       refreshToken.value = loginData.refreshToken
-      
+
       user.value = {
         userId: loginData.userId,
-        role: loginData.role
+        name: loginData.name,
+        role: loginData.role,
       }
 
       localStorage.setItem('accessToken', accessToken.value)
@@ -58,7 +59,7 @@ export const useAuthStore = defineStore('auth', () => {
         password: userData.password,
         name: userData.name,
         email: userData.email,
-        tel: userData.phone // Frontend uses 'phone', backend uses 'tel'
+        tel: userData.phone, // Frontend uses 'phone', backend uses 'tel'
       }
 
       await api.post('/auth/signup', requestData)
@@ -75,6 +76,6 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken,
     login,
     logout,
-    signup
+    signup,
   }
 })
