@@ -202,6 +202,7 @@ const goToday = () => {
 }
 
 const isEditing = ref(false)
+const isLoading = ref(false)
 
 const openCreateModal = () => {
   isEditing.value = false
@@ -276,6 +277,8 @@ const handleSubmit = async () => {
     return
   }
 
+  isLoading.value = true
+
   try {
     const dateTime = `${form.value.classDate}T${form.value.classTime}:00`
 
@@ -305,6 +308,8 @@ const handleSubmit = async () => {
     await modalStore.alert(
       isEditing.value ? '일정 수정에 실패했습니다.' : '일정 등록에 실패했습니다.',
     )
+  } finally {
+    isLoading.value = false
   }
 }
 </script>
@@ -364,16 +369,20 @@ const handleSubmit = async () => {
     </div>
 
     <!-- Create/Edit Schedule Modal -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+    <div v-if="showModal" class="modal-overlay" @click.self="!isLoading && closeModal()">
       <div class="modal-content">
         <div class="modal-header">
           <h3 class="modal-title">{{ isEditing ? '수업 일정 수정' : '새 수업 일정 등록' }}</h3>
         </div>
 
+        <div v-if="isLoading" class="progress-bar">
+          <div class="progress-value"></div>
+        </div>
+
         <form @submit.prevent="handleSubmit">
           <div class="form-group">
             <label>과목 <span class="required">*</span></label>
-            <select v-model="form.subject" required>
+            <select v-model="form.subject" required :disabled="isLoading">
               <option v-for="sub in subjects" :key="sub.value" :value="sub.value">
                 {{ sub.label }}
               </option>
@@ -382,7 +391,7 @@ const handleSubmit = async () => {
 
           <div class="form-group">
             <label>학생 <span class="required">*</span></label>
-            <select v-model="form.studentId" required>
+            <select v-model="form.studentId" required :disabled="isLoading">
               <option value="" disabled>학생 선택</option>
               <option
                 v-for="student in students"
@@ -397,29 +406,43 @@ const handleSubmit = async () => {
           <div class="form-row">
             <div class="form-group">
               <label>날짜 <span class="required">*</span></label>
-              <input v-model="form.classDate" type="date" required />
+              <input v-model="form.classDate" type="date" required :disabled="isLoading" />
             </div>
             <div class="form-group">
               <label>시간 <span class="required">*</span></label>
-              <input v-model="form.classTime" type="time" required />
+              <input v-model="form.classTime" type="time" required :disabled="isLoading" />
             </div>
           </div>
 
           <div class="form-group">
             <label>장소</label>
-            <input v-model="form.classLocation" type="text" placeholder="수업 장소 (선택)" />
+            <input
+              v-model="form.classLocation"
+              type="text"
+              placeholder="수업 장소 (선택)"
+              :disabled="isLoading"
+            />
           </div>
 
           <div class="form-group">
             <label>수업 내용</label>
-            <textarea v-model="form.content" placeholder="수업 내용 메모"></textarea>
+            <textarea
+              v-model="form.content"
+              placeholder="수업 내용 메모"
+              :disabled="isLoading"
+            ></textarea>
           </div>
 
           <div class="modal-actions">
-            <button type="button" class="btn btn-secondary btn-full" @click="closeModal">
+            <button
+              type="button"
+              class="btn btn-secondary btn-full"
+              @click="closeModal"
+              :disabled="isLoading"
+            >
               취소
             </button>
-            <button type="submit" class="btn btn-primary btn-full">
+            <button type="submit" class="btn btn-primary btn-full" :disabled="isLoading">
               {{ isEditing ? '수정' : '등록' }}
             </button>
           </div>
@@ -788,5 +811,34 @@ const handleSubmit = async () => {
   white-space: pre-wrap;
   font-size: 0.9rem;
   color: var(--color-text-sub);
+}
+
+.progress-bar {
+  height: 4px;
+  background-color: #e0e7ff;
+  overflow: hidden;
+  width: 100%;
+  margin-bottom: 1rem;
+  border-radius: 2px;
+}
+
+.progress-value {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-primary);
+  animation: indeterminate 1.5s infinite linear;
+  transform-origin: 0% 50%;
+}
+
+@keyframes indeterminate {
+  0% {
+    transform: translateX(0) scaleX(0);
+  }
+  40% {
+    transform: translateX(0) scaleX(0.4);
+  }
+  100% {
+    transform: translateX(100%) scaleX(0.5);
+  }
 }
 </style>
